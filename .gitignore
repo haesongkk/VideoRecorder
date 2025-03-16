@@ -1,3 +1,10 @@
+# Visual Studio 관련 폴더 및 파일 무시
+.vs/
+*.suo
+*.user
+*.VC.db
+*.VC.opendb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
