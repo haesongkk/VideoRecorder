@@ -1,92 +1,95 @@
-﻿import cv2
+﻿from tkinter import TRUE
+import cv2
 from datetime import datetime
 
-URL = "http://210.99.70.120:1935/live/cctv032.stream/playlist.m3u8"
 
-# VideoCapture 객체 생성
-video = cv2.VideoCapture(URL)
-if not video.isOpened():
-    print("비디오가 열리지 않습니다.")
-    exit()
+def CreateVC(url):
 
-# 프레임 크기 및 FPS 설정
-frame_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-fps = int(video.get(cv2.CAP_PROP_FPS))
+     vc = cv2.VideoCapture(url)
+     if not vc.isOpened():
+         raise RuntimeError("VideoCapture 초기화 실패")
 
-# FPS와 해상도가 0이면 기본값 설정
-if fps <= 0 or fps > 60:  
-    fps = 30 
-if frame_width == 0 or frame_height == 0:
-    frame_width, frame_height = 640, 480  
+     return vc
 
-# 코덱 설정
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
-# 녹화 상태 변수
-recording = False  
+def DestroyVC(vc):
 
-# VideoWriter 객체
-video_writer = None  
+    if vc is not None:
+           vc.release()
 
-# 녹화 시작 시간
-record_start_time = None  
+    return None            
 
-# 프레임 카운트 (깜빡임 효과)
-frame_count = 0  
 
-print("Space 키: 녹화 시작/중지 | ESC 키: 종료")
+def CreateVW(vc):
+
+    # 파일명 설정
+    filename = f"video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+
+    # 코덱 설정
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+
+    # 프레임 크기 및 FPS 설정
+    fps = int(vc.get(cv2.CAP_PROP_FPS))
+    frame_width = int(vc.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(vc.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    # FPS와 해상도가 0이면 기본값 설정
+    if frame_width == 0 or frame_height == 0:
+        frame_width, frame_height = 640,480
+    if fps <= 0 or fps > 60:
+        fps = 30
+
+    # VideoWriter 객체 생성
+    vw = cv2.VideoWriter(filename, fourcc, fps, (frame_width, frame_height))
+
+    if not vw.isOpened():
+        raise RuntimeError("VideoWriter 초기화 실패")
+
+    return vw
+
+
+def DestroyVW(vw):
+
+    if vw is not None:
+            vw.release()
+    
+    return None            
+
+
+# main
+
+url = "http://210.99.70.120:1935/live/cctv032.stream/playlist.m3u8"
+vc = CreateVC(url)
+vw = None
+recording = False
 
 while True:
 
-    # 최신 프레임을 받아온다
-    valid, frame = video.read()
-    if not valid:
-        print("프레임을 읽을 수 없습니다.")
-        break
-        
-    # 녹화 중이면 비디오 저장
-    if recording and video_writer is not None:
-        video_writer.write(frame)
-
-        elapsed_time = int((datetime.now() - record_start_time).total_seconds())
-        time_text = f"{elapsed_time // 60:02}:{elapsed_time % 60:02}"  
-        cv2.putText(frame, time_text, (80, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-        if (frame_count // fps) % 2 == 0:  
-            cv2.circle(frame, (50, 50), 10, (0, 0, 255), -1)
-
-    # 프레임 카운트 증가 (깜빡임 효과)
-    frame_count += 1
-
-    # 현재 프레임 띄우기
-    cv2.imshow('Video Stream', frame)
-
-    # 키 입력 받기
     key = cv2.waitKey(1) & 0xFF
 
-    # ESC 키를 누르면 종료
     if key == 27:
         break
 
-    # Space 키를 누르면 녹화 시작/중지
     if key == 32: 
-        if not recording:
-            recording = True
-            # 녹화 시작 시간 저장
-            record_start_time = datetime.now()  
-            # 파일명 설정
-            output_filename = f"video_{record_start_time.strftime('%Y%m%d_%H%M%S')}.mp4"
-            # VideoWriter 객체 생성
-            video_writer = cv2.VideoWriter(output_filename, fourcc, fps, (frame_width, frame_height))
-        else:
-            recording = False
-             # VideoWriter 객체 해제
-            video_writer.release() 
-            video_writer = None
+        recording = not recording
+        if recording:
+            vw = CreateVW(vc)
+        else :
+            vw = DestroyVW(vw)
 
-# 자원 해제
-video.release()
-if video_writer is not None:
-    video_writer.release()
+
+    valid, frame = vc.read()
+    if not valid:
+        raise RuntimeError("프레임을 읽을 수 없습니다.")
+
+    if recording:
+        vw.write(frame)
+        cv2.putText(frame, "recording..", (20, 40),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+    cv2.imshow('Video Stream', frame)
+
+
+DestroyVC(vc)
+DestroyVW(vw)
 cv2.destroyAllWindows()
+
