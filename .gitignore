@@ -5,6 +5,11 @@
 *.VC.db
 *.VC.opendb
 
+# Configuration and environment files
+*.ini
+.env
+config.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
