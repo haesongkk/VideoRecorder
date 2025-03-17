@@ -42,10 +42,20 @@ url = "http://210.99.70.120:1935/live/cctv032.stream/playlist.m3u8"
 vc = CreateVC(url)
 vw = None
 recording = False
-
-# 0: 원본, 1: 객체 감지
-mode = 0  
+mode = 0  # 0: 원본, 1: 객체 감지
 show_help = False
+zoom_enabled = False
+mouse_x, mouse_y = 0, 0
+zoom_size = 100  # 확대 영역 크기
+zoom_factor = 2  # 확대 배율
+
+def mouse_callback(event, x, y, flags, param):
+    global mouse_x, mouse_y
+    if event == cv2.EVENT_MOUSEMOVE:
+        mouse_x, mouse_y = x, y
+
+cv2.namedWindow("Video Feed")
+cv2.setMouseCallback("Video Feed", mouse_callback)
 
 fgbg = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=50, detectShadows=True)
 frameCount = 0
@@ -70,6 +80,11 @@ while True:
     
     if key == 9:  # TAB 키 입력 시 도움말 토글
         show_help = not show_help
+    
+    if key == ord('x'):  # x 키 입력 시 확대 기능 토글
+        zoom_enabled = not zoom_enabled
+        if not zoom_enabled:
+            cv2.destroyWindow("Zoomed View")
 
     valid, image = vc.read()
     if not valid:
@@ -99,6 +114,15 @@ while True:
         vw.write(display_image)
         cv2.putText(display_image, "recording..", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     
+    if zoom_enabled:
+        x1 = max(min(mouse_x - zoom_size // 2, display_image.shape[1] - zoom_size), 0)
+        y1 = max(min(mouse_y - zoom_size // 2, display_image.shape[0] - zoom_size), 0)
+        x2, y2 = x1 + zoom_size, y1 + zoom_size
+        zoom_region = display_image[y1:y2, x1:x2]
+        if zoom_region.size > 0:
+            zoom_region = cv2.resize(zoom_region, (zoom_size * zoom_factor, zoom_size * zoom_factor), interpolation=cv2.INTER_LINEAR)
+            cv2.imshow("Zoomed View", zoom_region)
+    
     if show_help:
         overlay = display_image.copy()
         cv2.rectangle(overlay, (50, 50), (600, 200), (0, 0, 0), -1)
@@ -106,6 +130,7 @@ while True:
         cv2.putText(overlay, "ESC: Exit", (60, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
         cv2.putText(overlay, "SPACE: Start/Stop Recording", (60, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
         cv2.putText(overlay, "Z: Toggle Mode", (60, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        cv2.putText(overlay, "X: Toggle Zoom", (60, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
         display_image = cv2.addWeighted(overlay, 0.7, display_image, 0.3, 0)
     
     cv2.putText(display_image, "Press TAB to Toggle Help", (20, display_image.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
