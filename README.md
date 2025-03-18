@@ -1,16 +1,12 @@
 # VideoRecorder
 
+
 This tool captures and processes live video streams with multiple features including motion detection, recording, and zoom functionality.
 
 ### Requirements
 - Python 3.13
 - OpenCV (`pip install opencv-python`)
 - NumPy (`pip install numpy`)
-
-### Features
-- **Live video capture** from a streaming source.
-- **Motion detection** using background subtraction.
-- **Zoom functionality** to inspect regions of interest.
 
 ### Controls
 - `ESC` : Exit program
@@ -22,20 +18,15 @@ This tool captures and processes live video streams with multiple features inclu
 ### Notes
 - All comments are written in Korean.
 
-### Screenshot
-![preview](screenshots/preview.png)
-![recording](screenshots/recording.png)
-![ui](screenshots/ui.png)
-![zoom](screenshots/zoom.png)
-![detection](screenshots/detection.png)
-
 ---
 
-## 프로젝트 개요
+### 프로젝트 개요
 
-개발 인원 : 1인
-개발 기간 : 3일, 2025.03.16 ~ 2025.03.18
-개발 환경
+개발 인원 : 1명   
+
+개발 기간 : 3일, 2025.03.16 ~ 2025.03.18   
+
+개발 환경   
 - language : Python 3.13
 - libraries : OpenCV, NumPy
 - platform: Windows (Developed & Tested) / macOS / Linux
@@ -57,7 +48,4 @@ python의 openCV 라이브러리를 이용하여 제작한 동영상 녹화 프�
 - 코드 정리 및 주석 작성
 - 단축키 변경
 - 실행파일 없음
-
----
-
-## 개발 과정
+- README 꾸미기
